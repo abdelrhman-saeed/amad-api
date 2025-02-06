@@ -2,27 +2,56 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\FightPricingRequest;
 use App\Http\Requests\FlightOfferRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use App\Models\TokenID;
+use Laravel\Sanctum\PersonalAccessToken;
+use Log;
 
 
 class FlightsController extends Controller
 {
-    public function offers(FlightOfferRequest $request): array
-    {
-        $token = auth()->user()->currentAccessToken();
-        $externalToken = TokenID::where('token_id', $token['id'])->firstOrFail();
+    private PersonalAccessToken $token;
+    private TokenID $tokenID;
 
-        return Http::withToken($externalToken->access_token)
-                    ->withHeader('ama-client-ref', $externalToken->uuid)
-                    ->post(env('AMADEUS_FLIGHT_OFFERS'), $request->validated())
-                    ->json();
+    public function __construct()
+    {
+        $this->token      = auth()->user()->currentAccessToken();
+        $this->tokenID    = TokenID::where('token_id', $this->token['id'])->firstOrFail();
     }
 
-    public function pricing(): string
+    private function externalAPICall(string $endoint, array $data)
     {
-        return '';
+        $response = Http::withToken($this->tokenID->access_token)
+                        ->withHeader('ama-client-ref', $this->tokenID->uuid)
+                        ->post($endoint, $data)
+                        ->json();
+
+        Log::channel('request')->info("User Api Call", [
+                'User'              => auth()->user()->id,
+                'ama_client_ref'    => $this->tokenID->uuid,
+                'endpoint'          => $endoint
+            ]);
+
+        return $response;
+    }
+
+    public function offers(FlightOfferRequest $request): array
+    {
+        return $this->externalAPICall(
+                env('AMADEUS_FLIGHT_OFFERS'),
+                $request->validated()
+            );
+
+    }
+
+    public function pricing(FightPricingRequest $request): array
+    {
+        return $this->externalAPICall(
+                env('AMADEUS_FLIGHT_PRICING'),
+                $request->validated()
+            );
     }
 }
