@@ -18,6 +18,11 @@ Route::prefix('flights')->group(function ()
                     Route::post('signup', 'signup')->middleware('guest:sanctum');
                 });
 
-    Route::get('offers', [FlightsController::class, 'offers'])->middleware('auth:sanctum');
+    Route::middleware('auth:sanctum')
+            ->group(function ()
+                {
+                    Route::post('offers', [FlightsController::class, 'offers']);
+                    Route::post('pricing', [FlightsController::class, 'pricing']);
+                });
 
 });
