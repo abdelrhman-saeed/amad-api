@@ -60,17 +60,23 @@ class FlightsController extends Controller
     private function addAdditionalPricingPercentage(array $price): array
     {
         $price['total'] += $price['total'] * $this->additionalPricingPercentage;
-        $price['base'] += $price['base'] * $this->additionalPricingPercentage;
+        $price['base']  += $price['base']  * $this->additionalPricingPercentage;
+
+        if (isset($price['grandTotal'])) {
+            $price['grandTotal'] += $price['grandTotal'] * $this->additionalPricingPercentage;
+        }
 
         return $price;
     }
 
     private function restorePricing(array $price): array
     {
-        $additionalPricingPercentage = 0.5;
-
         $price['total'] -= $price['total'] * $this->additionalPricingPercentage;
         $price['base']  -= $price['base']  * $this->additionalPricingPercentage;
+
+        if (isset($price['grandTotal'])) {
+            $price['grandTotal'] -= $price['grandTotal'] * $this->additionalPricingPercentage;
+        }
 
         return $price;
     }
