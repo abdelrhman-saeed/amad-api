@@ -24,14 +24,14 @@ class AuthController extends Controller
                     ])->json('access_token');
     }
  
-    public function signup(RegisterUserRequest $request)
+    public function register(RegisterUserRequest $request)
     {
         User::create($request->validated());
 
         return response('registered');
     }
 
-    public function signin(Request $request)
+    public function login(Request $request)
     {
         $credentials = $request->validate([
             'email'     => 'required|email',
@@ -62,7 +62,7 @@ class AuthController extends Controller
         return ['token' => $sanctumAccessToken['plainTextToken']];
     }
 
-    public function signout(Request $request): void
+    public function logout(Request $request): void
     {
         auth()->user()->tokens()->delete();
     }

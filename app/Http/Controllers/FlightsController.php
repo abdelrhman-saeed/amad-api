@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\FightPricingRequest;
 use App\Http\Requests\FlightOfferRequest;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use App\Models\TokenID;
 use Laravel\Sanctum\PersonalAccessToken;

@@ -11,18 +11,18 @@ Route::prefix('flights')->group(function ()
     Route::controller(AuthController::class)
             ->group(function (): void
                 {
-                    Route::get('signout', 'signout')
+                    Route::get('logout', 'logout')
                             ->middleware('auth:sanctum');
 
-                    Route::post('signin', 'signin');
-                    Route::post('signup', 'signup')->middleware('guest:sanctum');
+                    Route::post('login', 'login');
+                    Route::post('register', 'register')->middleware('guest:sanctum');
                 });
 
     Route::middleware('auth:sanctum')
             ->group(function ()
                 {
-                    Route::post('offers', [FlightsController::class, 'offers']);
-                    Route::post('pricing', [FlightsController::class, 'pricing']);
+                    Route::post('flight-offers', [FlightsController::class, 'offers']);
+                    Route::post('flight-pricings', [FlightsController::class, 'pricing']);
                 });
 
 });
