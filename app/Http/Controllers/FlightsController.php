@@ -39,51 +39,69 @@ class FlightsController extends Controller
 
     public function offers(FlightOfferRequest $request): array
     {
-        return $this->externalAPICall(
-                env('AMADEUS_FLIGHT_OFFERS'),
-                $request->validated()
-            );
+        $result = $this->externalAPICall(
+                    env('AMADEUS_FLIGHT_OFFERS'),
+                    $request->validated()
+                );
 
+        foreach($result['data'] as &$offer)
+        {
+            $offer['price'] = $this->addAdditionalPricingPercentage($offer['price']);
+
+            foreach($offer['travelerPricings'] as &$travelerPricing) {
+                $travelerPricing['price'] = $this->addAdditionalPricingPercentage($travelerPricing['price']);
+            }
+        }
+
+        return $result;
+    }
+
+    private function addAdditionalPricingPercentage(array $price): array
+    {
+        $additionalPricingPercentage = 0.5;
+
+        return [
+            'currency'  => $price['currency'],
+            'total'     => $price['total'] + $price['total'] * $additionalPricingPercentage,
+            'base'      => $price['base']  + $price['base']  * $additionalPricingPercentage,
+        ];
+    }
+
+    private function restorePricing(array $price): array
+    {
+        $additionalPricingPercentage = 0.5;
+
+        return [
+            'currency'  => $price['currency'],
+            'total'     => $price['total'] - $price['total'] * $additionalPricingPercentage,
+            'base'      => $price['base']  - $price['base']  * $additionalPricingPercentage,
+        ];
     }
 
     public function pricing(FightPricingRequest $request): array
     {
-        $result = $this->externalAPICall(
-                env('AMADEUS_FLIGHT_PRICING'),
-                $request->validated()
-            );
+        $validated = $request->validated();
 
-        if (!isset($result['data']['flightOffers'])) {
-            return $result;
+        foreach($validated['data']['flightOffers'] as &$offer)
+        {
+            $offer['price'] = $this->restorePricing($offer['price']);
+
+            foreach($offer['travelerPricings'] as &$travelerPricing) {
+                $travelerPricing['price'] = $this->restorePricing($travelerPricing['price']);
+            }
         }
 
-        $additionalPricingAmount = 0;
-
-        $additionalPricingAmount = $request->filled('data.additionalPricingAmount')
-            ? $request->post('data')['additionalPricingAmount']
-            : 0;
-
-        $adjustPrice = function (array $prices) use ($additionalPricingAmount) : array {
-            return [
-                'currency'  => $prices['currency'],
-                'total'     => $prices['total'] + $prices['total'] * $additionalPricingAmount,
-                'base'      => $prices['base']  + $prices['base'] * $additionalPricingAmount,
-            ];
-        };
+        $result = $this->externalAPICall(
+                    env('AMADEUS_FLIGHT_PRICING'),
+                    $validated
+                );
 
         foreach($result['data']['flightOffers'] as &$offer)
         {
-            if (isset($offer['price'])) {
-                $offer['price'] = $adjustPrice($offer['price']);
-            }
+            $offer['price'] = $this->addAdditionalPricingPercentage($offer['price']);
 
-            if (isset($offer['travelerPricings'])) {
-
-                $offer['travelerPricings']
-                    = array_map(
-                        fn (array $arr) => $adjustPrice($arr['price']),
-                        $offer['travelerPricings']
-                    );
+            foreach($offer['travelerPricings'] as &$travelerPricing) {
+                $travelerPricing['price'] = $this->addAdditionalPricingPercentage($travelerPricing['price']);
             }
         }
 
