@@ -57,11 +57,17 @@ class FlightsController extends Controller
             return $result;
         }
 
-        $adjustPrice = function (array $prices): array {
+        $additionalPricingAmount = 0;
+
+        $additionalPricingAmount = $request->filled('data.additionalPricingAmount')
+            ? $request->post('data')['additionalPricingAmount']
+            : 0;
+
+        $adjustPrice = function (array $prices) use ($additionalPricingAmount) : array {
             return [
                 'currency'  => $prices['currency'],
-                'total'     => $prices['total'] + $prices['total'] * 0.5,
-                'base'      => $prices['base']  + $prices['base'] * 0.5,
+                'total'     => $prices['total'] + $prices['total'] * $additionalPricingAmount,
+                'base'      => $prices['base']  + $prices['base'] * $additionalPricingAmount,
             ];
         };
 
