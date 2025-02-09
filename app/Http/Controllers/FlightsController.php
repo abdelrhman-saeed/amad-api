@@ -14,6 +14,7 @@ class FlightsController extends Controller
 {
     private PersonalAccessToken $token;
     private TokenID $tokenID;
+    private float $additionalPricingPercentage = 0.5 / 100;
 
     public function __construct()
     {
@@ -58,24 +59,20 @@ class FlightsController extends Controller
 
     private function addAdditionalPricingPercentage(array $price): array
     {
-        $additionalPricingPercentage = 0.5;
+        $price['total'] += $price['total'] * $this->additionalPricingPercentage;
+        $price['base'] += $price['base'] * $this->additionalPricingPercentage;
 
-        return [
-            'currency'  => $price['currency'],
-            'total'     => $price['total'] + $price['total'] * $additionalPricingPercentage,
-            'base'      => $price['base']  + $price['base']  * $additionalPricingPercentage,
-        ];
+        return $price;
     }
 
     private function restorePricing(array $price): array
     {
         $additionalPricingPercentage = 0.5;
 
-        return [
-            'currency'  => $price['currency'],
-            'total'     => $price['total'] - $price['total'] * $additionalPricingPercentage,
-            'base'      => $price['base']  - $price['base']  * $additionalPricingPercentage,
-        ];
+        $price['total'] -= $price['total'] * $this->additionalPricingPercentage;
+        $price['base']  -= $price['base']  * $this->additionalPricingPercentage;
+
+        return $price;
     }
 
     public function pricing(FightPricingRequest $request): array
