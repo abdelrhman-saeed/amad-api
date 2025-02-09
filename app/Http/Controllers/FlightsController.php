@@ -48,9 +48,39 @@ class FlightsController extends Controller
 
     public function pricing(FightPricingRequest $request): array
     {
-        return $this->externalAPICall(
+        $result = $this->externalAPICall(
                 env('AMADEUS_FLIGHT_PRICING'),
                 $request->validated()
             );
+
+        if (!isset($result['data']['flightOffers'])) {
+            return $result;
+        }
+
+        $adjustPrice = function (array $prices): array {
+            return [
+                'currency'  => $prices['currency'],
+                'total'     => $prices['total'] + $prices['total'] * 0.5,
+                'base'      => $prices['base']  + $prices['base'] * 0.5,
+            ];
+        };
+
+        foreach($result['data']['flightOffers'] as &$offer)
+        {
+            if (isset($offer['price'])) {
+                $offer['price'] = $adjustPrice($offer['price']);
+            }
+
+            if (isset($offer['travelerPricings'])) {
+
+                $offer['travelerPricings']
+                    = array_map(
+                        fn (array $arr) => $adjustPrice($arr['price']),
+                        $offer['travelerPricings']
+                    );
+            }
+        }
+
+        return $result;
     }
 }

@@ -45,9 +45,9 @@ class AuthController extends Controller
             return response('invalid email or password', 422);
         }
 
-        if ($user->tokens()->exists()) {
-            return response('already have a valid token', 401);
-        }
+        // if ($user->tokens()->exists()) {
+        //     return response('already have a valid token', 401);
+        // }
 
         $sanctumAccessToken = $user->createToken('default_token')->toArray();
 
