@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 class UserLog extends Model
 {
     protected $connection = 'sqlite';
-    protected $fillable   = ['data', 'user_id', 'token_id'];
+    protected $fillable   = ['request', 'response', 'user_id', 'token_id'];
 
 
     public function user()
