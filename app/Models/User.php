@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\DB;
+use Ramsey\Collection\Collection;
+
 
 class User extends Authenticatable
 {
@@ -47,4 +50,13 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function logs()
+    {
+        return DB::connection('sqlite')
+                    ->table('user_logs')
+                    ->where('user_id', $this->id)
+                    ->get();
+    }
+
 }

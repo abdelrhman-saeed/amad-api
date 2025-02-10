@@ -7,7 +7,8 @@ use App\Http\Requests\FlightOfferRequest;
 use Illuminate\Support\Facades\Http;
 use App\Models\TokenID;
 use Laravel\Sanctum\PersonalAccessToken;
-use Log;
+use App\Models\UserLog;
+
 
 class FlightsController extends Controller
 {
@@ -23,16 +24,16 @@ class FlightsController extends Controller
 
     private function externalAPICall(string $endpoint, array $data): array
     {
-        Log::channel('request')->info("User API Call", [
-            'user_id'        => auth()->user()->id,
-            'ama_client_ref' => $this->tokenID->uuid,
-            'endpoint'       => $endpoint
+        UserLog::create([
+            'user_id'   => auth()->user()->id,
+            'token_id'  => $this->tokenID->id,
+            'data'      => json_encode($data)
         ]);
 
         return Http::withToken($this->tokenID->access_token)
-                ->withHeader('ama-client-ref', $this->tokenID->uuid)
-                ->post($endpoint, $data)
-                ->json();
+                    ->withHeader('ama-client-ref', $this->tokenID->uuid)
+                    ->post($endpoint, $data)
+                    ->json();
     }
 
     private function adjustPricing(array &$price, bool $increase = true): void
@@ -66,7 +67,8 @@ class FlightsController extends Controller
     {
         $validated = $request->validated();
 
-        foreach ($validated['data']['flightOffers'] as &$offer) {
+        foreach ($validated['data']['flightOffers'] as &$offer)
+        {
             $this->adjustPricing($offer['price'], false);
 
             foreach ($offer['travelerPricings'] as &$travelerPricing) {
@@ -74,9 +76,13 @@ class FlightsController extends Controller
             }
         }
 
-        $result = $this->externalAPICall(env('AMADEUS_FLIGHT_PRICING'), $validated);
+        $result = $this->externalAPICall(
+                    env('AMADEUS_FLIGHT_PRICING'),
+                    $validated
+                );
 
-        foreach ($result['data']['flightOffers'] as &$offer) {
+        foreach ($result['data']['flightOffers'] as &$offer)
+        {
             $this->adjustPricing($offer['price']);
             
             foreach ($offer['travelerPricings'] as &$travelerPricing) {
