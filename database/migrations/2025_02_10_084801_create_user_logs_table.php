@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
 
-            $table->json('data')->nullable();
+            $table->json('request')->nullable();
+            $table->json('response')->nullable();
             $table->integer('user_id')->unsigned();
             $table->integer('token_id')->unsigned();
         });

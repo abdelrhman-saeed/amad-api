@@ -24,16 +24,20 @@ class FlightsController extends Controller
 
     private function externalAPICall(string $endpoint, array $data): array
     {
+
+        $response = Http::withToken($this->tokenID->access_token)
+                        ->withHeader('ama-client-ref', $this->tokenID->uuid)
+                        ->post($endpoint, $data)
+                        ->json();
+
         UserLog::create([
             'user_id'   => auth()->user()->id,
             'token_id'  => $this->tokenID->id,
-            'data'      => json_encode($data)
+            'request'   => json_encode($data),
+            'response'  => json_encode($data),
         ]);
 
-        return Http::withToken($this->tokenID->access_token)
-                    ->withHeader('ama-client-ref', $this->tokenID->uuid)
-                    ->post($endpoint, $data)
-                    ->json();
+        return $response;
     }
 
     private function adjustPricing(array &$price, bool $increase = true): void
