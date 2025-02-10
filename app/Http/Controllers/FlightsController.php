@@ -34,7 +34,7 @@ class FlightsController extends Controller
             'user_id'   => auth()->user()->id,
             'token_id'  => $this->tokenID->id,
             'request'   => json_encode($data),
-            'response'  => json_encode($data),
+            'response'  => json_encode($response)
         ]);
 
         return $response;
